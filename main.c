@@ -1,7 +1,7 @@
 /**********************************************************************
 Function for building, reading, and evaluating a lookup table.
 Meant to be used as UDF in Fluent.
-Compiled with GCC on windows. No optimization required.
+Compiled with GCC on windows. 
 Author: Anton Fadic
 University of Alberta
 Chemical Engineering
