@@ -14,11 +14,7 @@ Chemical Engineering
 #include "hInterp.h" //calls required functions for this file, found in funFile.c
 
 /*********************************************************************
-1) Left to do: Enforce 2nd order interpolation when it is on the borders. Done!
-2) Control for errors when out of range. Done!
-3) Adjust the code for multiple outputs. Done!
-4) Adjust the interpolation for multiple queries. Not necessary.
-5) Implement inverse function.
+1) Implement inverse function.
 Anton Fadic
 23/12/2016
 **********************************************************************/
