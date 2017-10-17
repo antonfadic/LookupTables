@@ -1,0 +1,13 @@
+'material file'
+material.dat
+
+'species data file'
+species.dat
+
+'number of species solved'
+6
+
+'solved species'
+NH3, O2, H2O, NO, N2, N2O
+
+
