@@ -1,12 +1,10 @@
 #include "stdio.h" // in out
-#include "stdlib.h" // for dynamic allocation
 #include "math.h" // math functions
-#include "time.h" // to compute time
 
 void displayAuthor(){
     printf("Written by Anton Fadic \n");
     printf("University of Alberta \n");
-    printf("Version 1.0 \n");
+    printf("Version 1.0r \n");
 }
 
 double *funTransformIn(double *inVal){
@@ -28,16 +26,23 @@ double *invFunTransformIn(double *inVal){
 }
 
 double *exactFun(double *inVal, int outDim, int InDim){
-    //this is the exact function to compare to.
-    double *temp=0; temp = malloc(sizeof(double)*InDim);
+    //this is the exact function to compare to
+
+    double *out=0;
+	out = malloc(sizeof(double)*InDim);
+	if(out==NULL){
+            printf("Memory not allocated. Table could not be read. Closing");
+        exit(0);
+    }
+
     double x,y,z;
     x=*inVal;
     y=*(inVal+1);
-    // *(temp) = pow(*(inVal),2)*1; //+ (pow(*(inVal+1),2) + pow(*(inVal+2),2) ); //+ pow(*(inVal+3),2))*10000;  //+ pow(*(inVal+3),2)*1 + pow(*(inVal+4),2)*1 + pow(*(inVal+5),2)*1 ; //output dim 1
-    *temp = exp((-x*x-y*y)/10);
-    // *(temp+1) = 2*(*temp);
-    // *(temp+2) = 3*(*temp);
-    return temp;
+    // *(out) = pow(*(inVal),2)*1; //+ (pow(*(inVal+1),2) + pow(*(inVal+2),2) ); //+ pow(*(inVal+3),2))*10000;  //+ pow(*(inVal+3),2)*1 + pow(*(inVal+4),2)*1 + pow(*(inVal+5),2)*1 ; //output dim 1
+    *out = ((-x*x*(1-y)-y*y));
+    // *(out+1) = 2*(*out);
+    // *(out+2) = 3*(*out);
+    return out;
 }
 
 void checkInBoundaries(int *fl, double *t,int nDimIn, double *nBreaks){
@@ -65,14 +70,6 @@ int *getPosition(int *coordinate, int *nBreaks, int nDimIn){
 	} //Message("\n");
 	return pos;
 }
-/*
-double CrInterp(double *ptrFll, double t){
-    //this is the magic 4 point interpolation. This works
-    double fll, fl, fr, frr;
-    fll = *ptrFll; fl = *(ptrFll+1); fr = *(ptrFll+2); frr = *(ptrFll+3);
-    return (1 - 3*t*t + 2*t*t*t )*fl + (3*t*t - 2*t*t*t)*fr + (t - 2*t*t + t*t*t)*(fr-fll)*0.5 + (-t*t + t*t*t)*(frr-fl)*0.5; }
-*/
-
 
 double CrInterp(double *ptrFll, double t, int pos){
 //this is the magic 4 point interpolation
@@ -93,42 +90,22 @@ switch(pos){
 	}
 }
 
-
-/*
-double CrInterp(double *ptrFll, double t, int pos){
-//this is the magic 4 point interpolation
-//Use Horner's method
-double fll, fl, fr, frr;
-double a[4]; //polynomial coefficients.
-fll = *ptrFll; fl = *(ptrFll+1); fr = *(ptrFll+2); frr = *(ptrFll+3);
-//Message("%4.3f %4.3f %4.3f %4.3f t is %4.3f and pos is %i \n", fll, fl, fr, frr, t, pos);
-
-a[0]=fl;
-switch(pos){
-	case 0 : //center
-		a[1]=(fr-fll)*0.5; a[2]=-2.5*fl+2*fr+fll-0.5*frr; a[3]=1.5*fl-0.5*fr-1.5*fll+0.5*frr;
-		//return (1 - 3*t*t + 2*t*t*t )*fl + (3*t*t - 2*t*t*t)*fr + (t - 2*t*t + t*t*t)*(fr-fll)*0.5 + (-t*t + t*t*t)*(frr-fl)*0.5;
-		return a[0]+t*(a[1]+t*(a[2]+t*a[3]));
-	case -1 : //left
-		a[1]=-2*fl+2*fr-0.5*(frr-fl); a[2]=fl-fr+0.5*(frr-fl);
-		return a[0]+t*(a[1]+t*(a[2]));
-		//return (1 - 2*t + t*t)*fl + (2*t - t*t)*fr + (-t+t*t)*(frr-fl)*0.5;
-	case 1 : //right
-		a[1]=fr; a[2]=-fl+0.5*fr+0.5*fll;
-		return a[0]+t*(a[1]+t*(a[2]));
-		//return (1 - t*t)*fl + t*t*fr + (t - t*t)*(fr-fll)*0.5;
-	default : //not necessary, but to prevent warning
-		a[1]=(fr-fll)*0.5; a[2]=-2.5*fl+2*fr+fll-0.5*frr; a[3]=1.5*fl-0.5*fr-1.5*fll+0.5*frr;
-		return a[0]+t*(a[1]+t*(a[2]+t*(a[3])));
-	}
-}
-*/
-
 double *readFile(int length, int nDimOut){
     FILE * fp;
-    double *ptrFile = 0; ptrFile = (double*) malloc(nDimOut*length*sizeof(double));
-    if(ptrFile==NULL){printf("Memory not allocated. Table could not be read. Closing"); exit(0);}
+
+    double *ptrFile = 0;
+	ptrFile = (double*) malloc(nDimOut*length*sizeof(double));
+    if(ptrFile==NULL){
+            printf("Memory not allocated. Table could not be read. Closing");
+    exit(0);
+    }
+
     fp = fopen ("Table.bin", "rb");
+    if(fp == NULL){
+        printf("Error in file opening\n");
+        exit(0);
+    }
+
     printf("Reading table file... \n");
     fread(ptrFile,sizeof(*ptrFile),nDimOut*length,fp);
     fclose (fp);
@@ -138,8 +115,17 @@ double *readFile(int length, int nDimOut){
 void writeTable(int length, int nDimIn, int nDimOut, double *grid){
     FILE * fp;
     int i,j;
-    double *ptrTable = 0;ptrTable=(double*) malloc(nDimOut*length*sizeof(double)); if(ptrTable==NULL){printf("memory not allocated. Closing...");exit(0);}
-    double *gridTemp = 0;gridTemp=(double*) malloc(sizeof(double)*nDimIn);
+    double *ptrTable = 0;
+
+    ptrTable=(double*) malloc(nDimOut*length*sizeof(double));
+    if(ptrTable==NULL){
+        printf("memory not allocated. Closing...");
+        exit(0);
+    }
+
+    double *gridTemp = 0;
+    gridTemp=(double*) malloc(sizeof(double)*nDimIn);
+
     //loop for writing the table. j is number of dimensions and i is entry.
     for(i=0; i<length; ++i){
         for(j=0;j<nDimOut;++j){
@@ -180,7 +166,6 @@ void writeTableConfig(int nDimIn, int nDimOut){
     // *(ptr+nDimIn+2+2) = (double) 0.00000001; *(ptr+2*nDimIn+2+2) = (double) 0.1; //yNO
     // *(ptr+nDimIn+2+3) = (double) 0.02; *(ptr+2*nDimIn+2+3) = (double) 0.25; //yO2
 
-
     fp = fopen ("tableConfig.bin", "wb");
     fwrite(ptr,sizeof(*ptr),3*nDimIn+2,fp);
     fclose (fp);
@@ -191,8 +176,15 @@ void writeTableConfig(int nDimIn, int nDimOut){
 double *readTableConfig(int nDim){
     FILE * fp;
     int i;
-    double *ptr2 = 0; ptr2 = (double*) malloc((3*nDim+2)*sizeof(double)); //required number of info: nDimIn, nDimOut, 3*nDim (breaks,min,max)
-    if(ptr2==NULL){printf("Memory not allocated. Closing readTableConfig"); exit(0);}
+
+    double *ptr2 = 0;
+    ptr2 = (double*) malloc((3*nDim+2)*sizeof(double)); //required number of info: nDimIn, nDimOut, 3*nDim (breaks,min,max)
+
+    if(ptr2==NULL){
+            printf("Memory not allocated. Closing readTableConfig");
+    exit(0);
+    }
+
     fp = fopen ("tableConfig.bin", "rb");
     printf("Reading config file... \n");
     fread(ptr2,1,(3*nDim+2)*sizeof(*ptr2),fp);
@@ -297,12 +289,25 @@ double *interpolate(double *x, int nDimIn, int nDimOut, double *ptrFirstVal, dou
     x = funTransformIn(x);
     x = invFunTransformIn(x);
     */
-    double *h = 0; h = (double*) malloc(sizeof(double)*nDimIn); //h is the spacing in between the data.
-    for(i=0;i<nDimIn;++i){ *(h+i) = (*(max+i)- *(min+i))/(*(nBreaks+i)-1); } //get the h
-    double *t=0; t=(double*) malloc(sizeof(double)*nDimIn); //position in table
-    int *fl=0; fl=(int*) malloc(sizeof(int)*nDimIn);
-    double *xTemp=0; xTemp=(double*) malloc(sizeof(double)*nDimIn);
-    for(i=0;i<nDimIn;++i){*(xTemp+i)= *(x+i);}; //copy query vector
+    double *h = 0;
+	h = (double*) malloc(sizeof(double)*nDimIn); //h is the spacing in between the data.
+
+	for(i=0;i<nDimIn;++i){
+		*(h+i) = (*(max+i)- *(min+i))/(*(nBreaks+i)-1);  //get the h
+	}
+
+    double *t=0;
+	t=(double*) malloc(sizeof(double)*nDimIn); //position in table
+
+    int *fl=0;
+	fl=(int*) malloc(sizeof(int)*nDimIn);
+
+	double *xTemp=0;
+	xTemp=(double*) malloc(sizeof(double)*nDimIn);
+
+	for(i=0;i<nDimIn;++i){
+		*(xTemp+i)= *(x+i); //copy query vector
+	};
 
     //calculate t
     for(k=0;k<nDimIn;k++){
@@ -316,8 +321,15 @@ double *interpolate(double *x, int nDimIn, int nDimOut, double *ptrFirstVal, dou
     checkInBoundaries(fl,t,nDimIn,nBreaks);       //adjust position if it lies outside borders. Safety measure to avoid extrapolation.
 
     //extract hypercube from table (1D output)
-    double *answer=0; answer=(double*) malloc(sizeof(double)*nDimOut*((int)pow(4,nDimIn))); if(answer==NULL){printf("Insuficient memory interpolate... Closing \n");exit(1);}
-    int refIndex=0; int temp=1; j=0;
+    double *answer=0;
+	answer=(double*) malloc(sizeof(double)*nDimOut*((int)pow(4,nDimIn)));
+	if(answer==NULL){
+		printf("Insuficient memory interpolate... Closing \n");exit(1);
+	}
+
+    int refIndex=0;
+	int temp=1;
+	j=0;
 
     //this loop extracts the corner double left location of the table, so we get the refIndex.
     while(j<nDimIn-1){
@@ -364,16 +376,15 @@ double *interpolate(double *x, int nDimIn, int nDimOut, double *ptrFirstVal, dou
         }
         j++;
     }
-    return answer;
-    // *answer = exp((*answer)/1000000);
+
     //undo transformation;
     //x = invFunTransformIn(x);
     //min = invFunTransformIn(min);
     //max = invFunTransformIn(max);
 
-
     //printf("answer is %f \n",*answer);
     //printf("exact  is: %f \n", *(exactFun(x,nDimOut,nDimIn)+nDimOut-1));
     //printf("error is %f \% \n", 100-100*(*answer/(*(exactFun(x,nDimOut,nDimIn)+nDimOut-1))) );
    // free(answer); free(h); free(t); free(xTemp); free(fl);
+   return answer;
 }

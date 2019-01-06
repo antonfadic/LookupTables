@@ -1,7 +1,7 @@
 /**********************************************************************
-Function for building, reading, and evaluating a lookup table.
-Meant to be used as UDF in Fluent.
-Compiled with GCC on windows. 
+Function for building, reading, and evaluating a lookup table
+using a Hermite 3rd order spline. Meant to be used as UDF in Fluent.
+Compiled with GCC on windows.
 Author: Anton Fadic
 University of Alberta
 Chemical Engineering
@@ -11,12 +11,11 @@ Chemical Engineering
 #include "stdlib.h" // for dynamic allocation
 #include "time.h" // to compute time
 #include "math.h" // math functions
-#include "hInterp.h" //calls required functions for this file, found in funFile.c
-
+#include "funFile.h" //calls required functions for this file, found in funFile.c
 /*********************************************************************
-1) Implement inverse function.
 Anton Fadic
-23/12/2016
+23/12/2016 First release
+06/01/2019 Code maintenance. Checked for memory leaks, readibility and name convention.
 **********************************************************************/
 
 int main(){
@@ -26,7 +25,8 @@ int main(){
     int i;
     writeTableConfig(nDimIn, nDimOut); //this writes the config file for the table
 
-    double *ptrFirstVal; ptrFirstVal = readTableConfig(nDimIn); //pointer to the address of the first entry of table config
+    double *ptrFirstVal;
+	ptrFirstVal = readTableConfig(nDimIn); //pointer to the address of the first entry of table config
 
     nVals = getNumVals(ptrFirstVal+2, nDimIn); //this gets the number of values of the grid.
     printf("Table size %f MB \n",(double) nVals*nDimOut/1024/1024*sizeof(double));
@@ -42,13 +42,19 @@ int main(){
     diff = clock() - start; int msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken write table %d seconds %d milliseconds \n", msec/1000, msec%1000);
 
-    double *ptrTableFirst; ptrTableFirst=readFile(nVals,nDimOut); // only read once. Table stored in memory ready to use :=) !
+    double *ptrTableFirst; ptrTableFirst=readFile(nVals,nDimOut); // only read once. Table stored in memory ready to use
 
-    for(i=0;i<nDimOut;++i){printf("table %i first value is: %f \n", i+1, *(ptrTableFirst+nVals*i));} //show table stats
+    for(i=0;i<nDimOut;++i){
+            printf("table %i first value is: %f \n", i+1, *(ptrTableFirst+nVals*i)); //show table stats
+    }
 
-    int numTestVal = 1; double *testValue; testValue = (double*) malloc(sizeof(double)*nDimIn*numTestVal);
+    int numTestVal = 1;
+    double *testValue;
+    testValue = (double*) malloc(sizeof(double)*nDimIn*numTestVal);
 
-    double *interpResult=0; interpResult=(double*) malloc(sizeof(double)*nDimIn*numTestVal);
+
+    double *interpResult=0;
+    interpResult=(double*) malloc(sizeof(double)*nDimIn*numTestVal);
 
     *(testValue + 0) = 1.9;  //temp
     *(testValue + 1) = 1.9;  //yNH3
